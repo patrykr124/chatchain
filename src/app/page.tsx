@@ -1,103 +1,108 @@
+'use client'
+
+import { signIn } from "next-auth/react";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { useAccount, useConnect, useDisconnect, useSignMessage } from "wagmi";
+import { injected } from 'wagmi/connectors';
+import Button from "./components/Button";
+import { Boxes } from "./components/ui/background-boxes";
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+  const { connectAsync } = useConnect();
+  const { disconnectAsync } = useDisconnect();
+  const { isConnected } = useAccount();
+  const { signMessageAsync } = useSignMessage();
+  const { push } = useRouter();
+  const [wait, setWait] = useState(false)
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+  const handleAuth = async () => {
+    try {
+      setWait(true);
+      if (isConnected) {
+        console.log("Odłączanie przed ponownym połączeniem...");
+        await disconnectAsync();
+      }
+  
+      const result = await connectAsync({
+        connector: injected({ target: "metaMask" }),
+      });
+  
+      const account = result.accounts[0];
+      const chainId = result.chainId;
+      if (!account || !chainId) {
+        console.log("Nie znaleziono konta lub łańcucha");
+        return;
+      }
+  
+      // **1️⃣ Pobranie wiadomości do podpisania**
+      const challengeResponse = await fetch("/api/moralis", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ address: account, chainId }),
+      });
+  
+      const challengeData = await challengeResponse.json();
+      if (!challengeResponse.ok) throw new Error("Błąd zapytania Moralis");
+  
+      // **2️⃣ Podpisanie wiadomości**
+      const signature = await signMessageAsync({ message: challengeData.message });
+  
+      // **3️⃣ Weryfikacja podpisu i zapis w Moralis**
+      const verifyResponse = await fetch("/api/moralis", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ address: account, chainId, signature, message: challengeData.message }),
+      });
+  
+      const verifyData = await verifyResponse.json();
+      if (!verifyResponse.ok) throw new Error("Błąd weryfikacji Moralis");
+  
+      console.log("✅ Użytkownik zapisany w Moralis:", verifyData);
+  
+      // **4️⃣ Logowanie użytkownika w NextAuth**
+      const signInResponse = await signIn("credentials", {
+        address: account,
+        signature,
+        redirect: false,
+        callbackUrl: `${window.location.origin}/home`,
+      });
+  
+      if (signInResponse?.url) {
+        await fetch("/api/auth/session");
+        push(signInResponse.url);
+      } else {
+        throw new Error("Logowanie nie powiodło się");
+      }
+  
+    } catch (error) {
+      console.error("Błąd uwierzytelniania:", error);
+    } finally {
+      setWait(false);
+    }
+  };
+  return (
+    <section style={{ backgroundImage: "url('/assets/bgHeader.png')", backgroundRepeat: "no-repeat", backgroundSize: "cover" }} className='h-screen relative overflow-hidden' >
+      <Boxes />
+      <div className='absolute w-full h-full bg-black/15 -z-1'></div>
+
+      <div className=' absolute bottom-0 -left-20 w-[600px] h-[350px]'>
+        <Image src={"/assets/monkey.png"} alt='bg_image' fill className="object-contain" />
+      </div>
+
+      <div className=' absolute top-10 right-10 w-[300px] h-[300px]'>
+        <Image src={"/assets/phone.png"} alt='bg_image' fill className="object-contain" />
+      </div>
+      <div className='z-[99999] w-full h-full flex items-center justify-center'>
+        <div className='flex items-center justify-center flex-col gap-6'>
+          <h1 className='text-black z-50'>Welcome in Chat Chain</h1>
+          <p className='text-black z-50'>Welcome in the Chat Group metaverse, create from Blockchain</p>
+          <div className="h-16 z-50">
+            <Button wait={wait} onClick={handleAuth} >{wait ? 'Pleas wait' : 'Welcome'}</Button>
+          </div>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
-  );
+      </div>
+    </section>
+  )
 }
