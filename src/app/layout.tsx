@@ -5,6 +5,7 @@ import "./globals.css";
 import { Providers } from "./Provider";
 const geistSans = Arvo({
   variable: "--font-geist-sans",
+  subsets:['latin'],
   weight: ["400", "700"]
 });
 

@@ -31,7 +31,7 @@ export const authOptions: NextAuthOptions = {
   },
   callbacks: {
     async jwt({ token, user, trigger }) {
-      console.log("JWT callback - token przed:", token);
+    
       if (trigger === "signOut") {
         return {};
       }
@@ -39,11 +39,11 @@ export const authOptions: NextAuthOptions = {
         token.user = { address: user.address };
         token.exp = Math.floor(Date.now() / 1000) + 30 * 24 * 60 * 60; // Expiry
       }
-      console.log("JWT callback - token po:", token);
+     
       return token;
     },
     async session({ session, token }) {
-      console.log("Session callback:", session, token);
+    
       if (token.user?.address) {
         session.user = {
           address: token.user.address,
