@@ -5,16 +5,19 @@ import { useState } from "react";
 import { useDisconnect, useSignMessage } from "wagmi";
 import Button from "../components/Button";
 
-
+interface SessionUser {
+  address?: string; 
+}
 
 
 export default function HomeApp() {
   const { disconnectAsync } = useDisconnect();
   const router = useRouter();
   const [message, setMessage] = useState('');
-  const { data: session, status } = useSession();
+  const { data: session } = useSession();
   const { signMessageAsync } = useSignMessage();
 
+  const user = session?.user as SessionUser;
 
   async function handleSingOut() {
     try {
@@ -32,7 +35,7 @@ export default function HomeApp() {
 
   async function handleSendMessage(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    if (!message || !session?.user?.address) return;
+    if (!message || !user?.address) return;
 
     try {
       const signature = await signMessageAsync({ message })
@@ -43,7 +46,7 @@ export default function HomeApp() {
           "Content-Type": "application/json"
 
         },
-        body: JSON.stringify({ message, sender: session?.user?.address, signature })
+        body: JSON.stringify({ message, sender: user?.address, signature })
       })
 
       if (!response.ok) {
@@ -70,7 +73,7 @@ export default function HomeApp() {
           <div className="  w-full overflow-hidden flex flex-col relative">
             <div className="absolute left-0  h-full w-1/2 bg-linear-to-r from-white to-transparent"></div>
             <div className="absolute right-0  h-full w-1/2 bg-linear-to-l from-white to-transparent"></div>
-            <h4 className="text-sm ">{session?.user?.address}</h4>
+            <h4 className="text-sm ">{user?.address}</h4>
           </div>
           <div className="min-h-[80px] flex items-center justify-center">
             <Button onClick={handleSingOut}>Logout</Button>
