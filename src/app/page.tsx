@@ -36,7 +36,6 @@ export default function Home() {
         return;
       }
   
-      // **1️⃣ Pobranie wiadomości do podpisania**
       const challengeResponse = await fetch("/api/moralis", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -46,10 +45,10 @@ export default function Home() {
       const challengeData = await challengeResponse.json();
       if (!challengeResponse.ok) throw new Error("Błąd zapytania Moralis");
   
-      // **2️⃣ Podpisanie wiadomości**
+     
       const signature = await signMessageAsync({ message: challengeData.message });
   
-      // **3️⃣ Weryfikacja podpisu i zapis w Moralis**
+   
       const verifyResponse = await fetch("/api/moralis", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -61,7 +60,6 @@ export default function Home() {
   
       console.log("✅ Użytkownik zapisany w Moralis:", verifyData);
   
-      // **4️⃣ Logowanie użytkownika w NextAuth**
       const signInResponse = await signIn("credentials", {
         address: account,
         signature,
@@ -83,21 +81,21 @@ export default function Home() {
     }
   };
   return (
-    <section style={{ backgroundImage: "url('/assets/bgHeader.png')", backgroundRepeat: "no-repeat", backgroundSize: "cover" }} className='h-screen relative overflow-hidden' >
+    <section style={{ backgroundImage: "url('/assets/bgHeader.png')", backgroundRepeat: "no-repeat", backgroundSize: "cover" }} className='h-screen relative overflow-hidden px-4 md:px-0' >
       <Boxes />
       <div className='absolute w-full h-full bg-black/15 -z-1'></div>
 
-      <div className=' absolute bottom-0 -left-20 w-[600px] h-[350px]'>
+      <div className=' absolute md:bottom-10 bottom-20 left-4 md:-left-20 w-[200px] h-[200px] md:w-[600px] md:h-[350px] '>
         <Image src={"/assets/monkey.png"} alt='bg_image' fill className="object-contain" />
       </div>
 
-      <div className=' absolute top-10 right-10 w-[300px] h-[300px]'>
+      <div className=' absolute md:top-10 md:right-10 right-4 top-20 md:w-[300px] md:h-[300px] w-[200px] h-[200px]'>
         <Image src={"/assets/phone.png"} alt='bg_image' fill className="object-contain" />
       </div>
       <div className='z-[99999] w-full h-full flex items-center justify-center'>
         <div className='flex items-center justify-center flex-col gap-6'>
-          <h1 className='text-black z-50'>Welcome in Chat Chain</h1>
-          <p className='text-black z-50'>Welcome in the Chat Group metaverse, create from Blockchain</p>
+          <h1 className='text-black z-50 text-center'>Welcome in Chat Chain</h1>
+          <p className='text-black z-50 text-center'>Welcome in the Chat Group metaverse, create from Blockchain</p>
           <div className="h-16 z-50">
             <Button wait={wait} onClick={handleAuth} >{wait ? 'Pleas wait' : 'Welcome'}</Button>
           </div>

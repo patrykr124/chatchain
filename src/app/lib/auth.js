@@ -35,7 +35,7 @@ export const authOptions = {
     
       if (user) {
         token.user = { address: user.address };
-        token.exp = Math.floor(Date.now() / 1000) + 30 * 24 * 60 * 60; // Expiry
+        token.exp = Math.floor(Date.now() / 1000) + 30 * 24 * 60 * 60; 
       }
      
       return token;
