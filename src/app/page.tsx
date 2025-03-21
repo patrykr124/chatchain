@@ -95,7 +95,7 @@ export default function Home() {
       <div className='z-[99999] w-full h-full flex items-center justify-center'>
         <div className='flex items-center justify-center flex-col gap-6'>
           <h1 className='text-black z-50 text-center'>Welcome in Chat Chain</h1>
-          <p className='text-black z-50 text-center'>Welcome in the Chat Group metaverse, create from Blockchain</p>
+          <p className='text-black z-50 text-center'>Welcome to the Chat Group Metaverse – powered by Blockchain.</p>
           <div className="h-16 z-50">
             <Button wait={wait} onClick={handleAuth} >{wait ? 'Pleas wait' : 'Welcome'}</Button>
           </div>
