@@ -85,11 +85,11 @@ export default function Home() {
       <Boxes />
       <div className='absolute w-full h-full bg-black/15 -z-1'></div>
 
-      <div className=' absolute md:bottom-10 bottom-0 left-4 md:-left-20 w-[200px] h-[200px] md:w-[600px] md:h-[350px] '>
+      <div className=' absolute md:bottom-10 bottom-6 left-4 md:-left-20 w-[150px] h-[150px] md:w-[600px] md:h-[350px] '>
         <Image src={"/assets/monkey.png"} alt='bg_image' fill className="object-contain" />
       </div>
 
-      <div className=' absolute md:top-10 md:right-10 right-4 top-0 md:w-[300px] md:h-[300px] w-[200px] h-[200px]'>
+      <div className=' absolute md:top-10 md:right-10 right-4 top-6 md:w-[300px] md:h-[300px] w-[150px] h-[150px]'>
         <Image src={"/assets/phone.png"} alt='bg_image' fill className="object-contain" />
       </div>
       <div className='z-[99999] w-full h-full flex items-center justify-center'>
